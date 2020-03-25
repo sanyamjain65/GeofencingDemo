@@ -11,7 +11,7 @@ import java.util.HashMap;
 public class Constants {
 
     //Location
-    public static final String GEOFENCE_ID = "TACME";
+    public static final String GEOFENCE_ID = "Lakshman Rekha";
     public static float GEOFENCE_RADIUS_IN_METERS = 50;
     public static double latitude = 28.6139;
     public static double longitude = 77.2090;
