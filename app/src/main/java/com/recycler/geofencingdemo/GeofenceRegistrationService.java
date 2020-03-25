@@ -2,11 +2,16 @@ package com.recycler.geofencingdemo;
 
 import android.app.IntentService;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
+import android.os.CountDownTimer;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
@@ -23,6 +28,7 @@ import java.util.List;
 public class GeofenceRegistrationService extends IntentService {
 
     private static final String TAG = "GeoIntentService";
+    private CountDownTimer countDownTimer;
 
     public GeofenceRegistrationService() {
         super(TAG);
@@ -37,37 +43,69 @@ public class GeofenceRegistrationService extends IntentService {
             int transaction = geofencingEvent.getGeofenceTransition();
             List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
             Geofence geofence = geofences.get(0);
-            if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER && geofence.getRequestId().equals(Constants.GEOFENCE_ID)) {
+            if (transaction == Geofence.GEOFENCE_TRANSITION_ENTER && geofence.getRequestId()
+                    .equals(Constants.GEOFENCE_ID)) {
                 Log.d(TAG, "You are inside Tacme");
             } else {
                 Log.d(TAG, "You are outside Tacme");
             }
-            String geofenceTransitionDetails = getGeofenceTrasitionDetails(transaction, geofences );
+            String geofenceTransitionDetails = getGeofenceTrasitionDetails(transaction, geofences);
 
-            sendNotification( geofenceTransitionDetails );
+            if (!geofenceTransitionDetails.isEmpty()) {
+                sendNotification(geofenceTransitionDetails);
+                startVibrator();
+            }
+        }
+    }
+
+    private void startVibrator() {
+        Vibrator v = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(3000, VibrationEffect.DEFAULT_AMPLITUDE));
+        } else {
+            v.vibrate(3000);
         }
     }
 
 
     // Create a detail message with Geofences received
-    private String getGeofenceTrasitionDetails(int geoFenceTransition, List<Geofence> triggeringGeofences) {
+    private String getGeofenceTrasitionDetails(
+            int geoFenceTransition, List<Geofence> triggeringGeofences) {
         // get the ID of each geofence triggered
         ArrayList<String> triggeringGeofencesList = new ArrayList<>();
-        for ( Geofence geofence : triggeringGeofences ) {
-            triggeringGeofencesList.add( geofence.getRequestId() );
+        for (Geofence geofence : triggeringGeofences) {
+            triggeringGeofencesList.add(geofence.getRequestId());
         }
 
         String status = null;
-        if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER )
-            status = "Entering ";
-        else if ( geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT )
+        if (geoFenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            if (countDownTimer != null) {
+                countDownTimer.cancel();
+                countDownTimer = null;
+            }
+            return "";
+        } else if (geoFenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
             status = "Exiting ";
-        return status + TextUtils.join( ", ", triggeringGeofencesList);
+            countDownTimer = new CountDownTimer(10000, 1000) {
+                @Override
+                public void onTick(long l) {
+
+                }
+
+                @Override
+                public void onFinish() {
+                    Log.d(TAG, "onFinish: Countdown timer has finished");
+                    countDownTimer.cancel();
+                    countDownTimer = null;
+                }
+            };
+        }
+        return status + TextUtils.join(", ", triggeringGeofencesList);
     }
 
     // Send a notification
-    private void sendNotification( String msg ) {
-        Log.i(TAG, "sendNotification: " + msg );
+    private void sendNotification(String msg) {
+        Log.i(TAG, "sendNotification: " + msg);
 
         // Intent to start the main Activity
         Intent notificationIntent = new Intent(this, MainActivity.class);
@@ -76,27 +114,36 @@ public class GeofenceRegistrationService extends IntentService {
         stackBuilder.addParentStack(MainActivity.class);
         stackBuilder.addNextIntent(notificationIntent);
         PendingIntent notificationPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationManager notificatioMng = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationCompat.Builder notificationBuilder = createNotification(msg, notificationPendingIntent);
+        int notifyID = 1;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            String CHANNEL_ID = "lakshman_rekha";// The id of the channel.
+            CharSequence name = "lakshman_rekha";// The user-visible name of the channel.
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+            notificationBuilder.setChannelId(CHANNEL_ID);
+            notificatioMng.createNotificationChannel(mChannel);
+        }
+        notificatioMng.notify(notifyID, notificationBuilder.build());
 
         // Creating and sending Notification
-        NotificationManager notificatioMng =
-                (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
-        notificatioMng.notify(
-                0,
-                createNotification(msg, notificationPendingIntent));
     }
 
     // Create a notification
-    private Notification createNotification(String msg, PendingIntent notificationPendingIntent) {
+    private NotificationCompat.Builder createNotification(
+            String msg, PendingIntent notificationPendingIntent) {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
-        notificationBuilder
-                .setSmallIcon(R.mipmap.ic_launcher_round)
+        notificationBuilder.setSmallIcon(R.mipmap.ic_launcher_round)
                 .setColor(Color.RED)
                 .setContentTitle(msg)
                 .setContentText("Geofence Notification!")
                 .setContentIntent(notificationPendingIntent)
                 .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
                 .setAutoCancel(true);
-        return notificationBuilder.build();
+        return notificationBuilder;
     }
 
     // Handle errors
@@ -111,4 +158,6 @@ public class GeofenceRegistrationService extends IntentService {
             default:
                 return "Unknown error.";
 
-        }}}
+        }
+    }
+}
