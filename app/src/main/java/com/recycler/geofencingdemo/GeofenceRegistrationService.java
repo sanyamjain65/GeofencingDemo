@@ -20,10 +20,6 @@ import com.google.android.gms.location.GeofencingEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by Manu on 11/24/2017.
- */
-
 public class GeofenceRegistrationService extends IntentService {
 
     private static final String TAG = "GeoIntentService";
@@ -85,7 +81,7 @@ public class GeofenceRegistrationService extends IntentService {
         NotificationManager notificatioMng =
                 (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
         notificatioMng.notify(
-               0,
+                0,
                 createNotification(msg, notificationPendingIntent));
     }
 

@@ -10,9 +10,11 @@ import java.util.HashMap;
 
 public class Constants {
 
-//Location
+    //Location
     public static final String GEOFENCE_ID = "TACME";
-    public static final float GEOFENCE_RADIUS_IN_METERS = 100;
+    public static float GEOFENCE_RADIUS_IN_METERS = 50;
+    public static double latitude = 28.6139;
+    public static double longitude = 77.2090;
 
     /**
      * Map for storing information about tacme in the dubai.
@@ -21,6 +23,6 @@ public class Constants {
 
     static {
         // Tacme
-        AREA_LANDMARKS.put(GEOFENCE_ID, new LatLng(25.116354, 55.390398));
+        AREA_LANDMARKS.put(GEOFENCE_ID, new LatLng(latitude, longitude));
     }
 }

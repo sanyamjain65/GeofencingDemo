@@ -11,7 +11,49 @@
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-       />
+        android:layout_height="match_parent" />
+
+    <RelativeLayout
+        android:id="@+id/rl_seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:background="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:max="100"
+            android:progress="50"
+            android:layout_above="@+id/bt_start"
+            android:layout_marginBottom="10dp"
+            android:layout_centerInParent="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/tv_seekbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:text="50"
+            android:layout_above="@+id/seekBar"
+            android:layout_marginBottom="10dp" />
+
+        <Button
+            android:id="@+id/bt_start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="10dp"
+            android:text="Start Monitoring"/>
+
+    </RelativeLayout>
+
 
 </android.support.constraint.ConstraintLayout>

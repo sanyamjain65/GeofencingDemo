@@ -14,6 +14,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -46,27 +51,69 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private MarkerOptions markerOptions;
     private Marker currentLocationMarker;
     private PendingIntent pendingIntent;
+    private SeekBar seekBar;
+    private TextView tv_seekbar;
+    private Button bt_start;
+    private RelativeLayout rl_seekbar;
+    Circle circle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
 
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this).build();
+        seekBar = findViewById(R.id.seekBar);
+        tv_seekbar = findViewById(R.id.tv_seekbar);
+        bt_start = findViewById(R.id.bt_start);
+        rl_seekbar = findViewById(R.id.rl_seekbar);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
+        googleApiClient = new GoogleApiClient.Builder(this).addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat
+                .checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION_PERMISSION_CODE);
         }
 
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                Log.d(TAG, "onProgressChanged: value of seekbar is " + i);
+                Constants.GEOFENCE_RADIUS_IN_METERS = (float) i;
+                tv_seekbar.setText(String.valueOf(i));
+                circle.setRadius(i);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                //                Log.d(TAG, "onProgressChanged: value of seekbar is " + seekBar.get);
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                //                Log.d(TAG, "onProgressChanged: value of seekbar is " + i);
+
+            }
+        });
+
+        bt_start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isMonitoring = true;
+                startGeofencing();
+                startLocationMonitor();
+                rl_seekbar.setVisibility(View.GONE);
+            }
+        });
 
     }
 
@@ -100,8 +147,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void startGeofencing() {
         Log.d(TAG, "Start geofencing monitoring call");
         pendingIntent = getGeofencePendingIntent();
-        geofencingRequest = new GeofencingRequest.Builder()
-                .setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
+        geofencingRequest = new GeofencingRequest.Builder().setInitialTrigger(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .addGeofence(getGeofence())
                 .build();
 
@@ -109,16 +155,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Log.d(TAG, "Google API client not connected");
         } else {
             try {
-                LocationServices.GeofencingApi.addGeofences(googleApiClient, geofencingRequest, pendingIntent).setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        if (status.isSuccess()) {
-                            Log.d(TAG, "Successfully Geofencing Connected");
-                        } else {
-                            Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
-                        }
-                    }
-                });
+                LocationServices.GeofencingApi.addGeofences(googleApiClient, geofencingRequest, pendingIntent)
+                        .setResultCallback(new ResultCallback<Status>() {
+                            @Override
+                            public void onResult(@NonNull Status status) {
+                                if (status.isSuccess()) {
+                                    Log.d(TAG, "Successfully Geofencing Connected");
+                                } else {
+                                    Log.d(TAG, "Failed to add Geofencing " + status.getStatus());
+                                }
+                            }
+                        });
             } catch (SecurityException e) {
                 Log.d(TAG, e.getMessage());
             }
@@ -130,8 +177,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @NonNull
     private Geofence getGeofence() {
         LatLng latLng = Constants.AREA_LANDMARKS.get(Constants.GEOFENCE_ID);
-        return new Geofence.Builder()
-                .setRequestId(Constants.GEOFENCE_ID)
+        return new Geofence.Builder().setRequestId(Constants.GEOFENCE_ID)
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setCircularRegion(latLng.latitude, latLng.longitude, Constants.GEOFENCE_RADIUS_IN_METERS)
                 .setNotificationResponsiveness(1000)
@@ -154,23 +200,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .setResultCallback(new ResultCallback<Status>() {
                     @Override
                     public void onResult(@NonNull Status status) {
-                        if (status.isSuccess())
-                            Log.d(TAG, "Stop geofencing");
-                        else
-                            Log.d(TAG, "Not stop geofencing");
+                        if (status.isSuccess()) Log.d(TAG, "Stop geofencing");
+                        else Log.d(TAG, "Not stop geofencing");
                     }
                 });
         isMonitoring = false;
+        rl_seekbar.setVisibility(View.VISIBLE);
         invalidateOptionsMenu();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        int response = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(MainActivity.this);
+        int response = GoogleApiAvailability.getInstance()
+                .isGooglePlayServicesAvailable(MainActivity.this);
         if (response != ConnectionResult.SUCCESS) {
             Log.d(TAG, "Google Play Service Not Available");
-            GoogleApiAvailability.getInstance().getErrorDialog(MainActivity.this, response, 1).show();
+            GoogleApiAvailability.getInstance()
+                    .getErrorDialog(MainActivity.this, response, 1)
+                    .show();
         } else {
             Log.d(TAG, "Google play service available");
         }
@@ -220,33 +268,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(final GoogleMap googleMap) {
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat
+                .checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
 
         this.googleMap = googleMap;
-        LatLng latLng = Constants.AREA_LANDMARKS.get(Constants.GEOFENCE_ID);
-        googleMap.addMarker(new MarkerOptions().position(latLng).title("TACME"));
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17f));
-
         googleMap.setMyLocationEnabled(true);
+        googleMap.setOnMyLocationChangeListener(new GoogleMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(Location location) {
+                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                Constants.AREA_LANDMARKS.put(Constants.GEOFENCE_ID, new LatLng(location.getLatitude(), location
+                        .getLongitude()));
+                googleMap.addMarker(new MarkerOptions().position(latLng).title("TACME"));
+                googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                googleMap.animateCamera(CameraUpdateFactory.zoomTo(17));
+                googleMap.getUiSettings().setZoomControlsEnabled(true);
 
-        Circle circle = googleMap.addCircle(new CircleOptions()
-                .center(new LatLng(latLng.latitude, latLng.longitude))
-                .radius(Constants.GEOFENCE_RADIUS_IN_METERS)
-                .strokeColor(Color.RED)
-                .strokeWidth(4f));
+                circle = googleMap.addCircle(new CircleOptions().center(new LatLng(latLng.latitude, latLng.longitude))
+                                                     .radius(Constants.GEOFENCE_RADIUS_IN_METERS)
+                                                     .strokeColor(Color.RED)
+                                                     .strokeWidth(4f));
+                googleMap.setOnMyLocationChangeListener(null);
+            }
+        });
+
 
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.d(TAG, "Google Api Client Connected");
-        isMonitoring = true;
-        startGeofencing();
-        startLocationMonitor();
+
     }
 
     @Override

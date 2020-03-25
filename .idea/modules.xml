@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/GeofencingDemo.iml" filepath="$PROJECT_DIR$/GeofencingDemo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/GeofencingDemo-app.iml" filepath="$PROJECT_DIR$/app/GeofencingDemo-app.iml" group="GeofencingDemo/app" />
+      <module fileurl="file://$PROJECT_DIR$/android project-GeofencingDemo.iml" filepath="$PROJECT_DIR$/android project-GeofencingDemo.iml" group="GeofencingDemo" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
