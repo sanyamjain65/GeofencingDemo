@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GeofencingDemo</string>
+    <string name="app_name">Stay@Home</string>
 
     <string name="google_map_key">AIzaSyBoFnQoMc19JJQ6duD6Gi2lZ3O0Q2rXXSA</string>
 </resources>
