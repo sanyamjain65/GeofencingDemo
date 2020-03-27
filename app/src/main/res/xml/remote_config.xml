@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<defaultsMap>
+    <entry>
+        <key>minimum_radius</key>
+        <value>50</value>
+    </entry>
+    <entry>
+        <key>maximum_radius</key>
+        <value>150</value>
+    </entry>
+</defaultsMap>

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1010859942322",
+    "firebase_url": "https://stay-at-home-01.firebaseio.com",
+    "project_id": "stay-at-home-01",
+    "storage_bucket": "stay-at-home-01.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010859942322:android:103596b3a4a1e83e2d84ab",
+        "android_client_info": {
+          "package_name": "in.coronathon.stayathome"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1010859942322-pt81tp5oqljhj5io197f8e3vbo3mc40l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARUaBQ84Cy23UuowcqsjDWT48JhTQnYBE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1010859942322-pt81tp5oqljhj5io197f8e3vbo3mc40l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

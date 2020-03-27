@@ -2,4 +2,6 @@
     <string name="app_name">Stay@Home</string>
 
     <string name="google_map_key">AIzaSyBoFnQoMc19JJQ6duD6Gi2lZ3O0Q2rXXSA</string>
+    <string name="facebook_application_id" translatable="false">1991309261137081</string>
+    <string name="facebook_login_protocol_scheme" translatable="false">fb1991309261137081</string>
 </resources>
