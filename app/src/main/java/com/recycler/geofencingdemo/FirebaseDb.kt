@@ -34,7 +34,7 @@ object FirebaseDb {
                 .getHttpsCallable("triggerAlert")
                 .call()
                 .addOnSuccessListener {
-                    Log.d("insertToken", it.data.toString())
+                    Log.d("triggerAlert", it.data.toString())
                 }
     }
 }
