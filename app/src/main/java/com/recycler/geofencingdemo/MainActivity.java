@@ -47,6 +47,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.recycler.geofencingdemo.activities.SplashActivity;
 
 import java.util.Arrays;
 import java.util.List;
@@ -80,11 +81,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         long minimumRadius = FirebaseRemoteConfig.getInstance().getLong("minimum_radius");
         long maximumRadius = FirebaseRemoteConfig.getInstance().getLong("maximum_radius");
 
+        if (minimumRadius <= 0) minimumRadius = 5;
+
+        if (maximumRadius <= 10) maximumRadius = 10;
+
 
         seekBar = findViewById(R.id.seekBar);
         tv_seekbar = findViewById(R.id.tv_seekbar);
         bt_start = findViewById(R.id.bt_start);
         rl_seekbar = findViewById(R.id.rl_seekbar);
+
+        seekBar.setMax((int) maximumRadius);
+        seekBar.setMin((int) minimumRadius);
+        seekBar.setProgress((int) (minimumRadius + ((maximumRadius - minimumRadius) / 2)));
+        tv_seekbar.setText(String.valueOf(seekBar.getProgress()));
 
         googleApiClient = new GoogleApiClient.Builder(this).addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
@@ -255,10 +265,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.manu_map_activity, menu);
         if (isMonitoring) {
-            menu.findItem(R.id.action_start_monitor).setVisible(false);
             menu.findItem(R.id.action_stop_monitor).setVisible(true);
         } else {
-            menu.findItem(R.id.action_start_monitor).setVisible(true);
             menu.findItem(R.id.action_stop_monitor).setVisible(false);
         }
         return true;
@@ -267,8 +275,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_start_monitor:
-                startGeofencing();
+            case R.id.login:
+                stopGeoFencing();
+                Intent intent = new Intent(MainActivity.this, SplashActivity.class);
+                startActivity(intent);
                 break;
             case R.id.action_stop_monitor:
                 stopGeoFencing();
