@@ -1,5 +1,6 @@
 package com.recycler.geofencingdemo
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.functions.FirebaseFunctions
@@ -23,9 +24,17 @@ object FirebaseDb {
         FirebaseFunctions.getInstance()
                 .getHttpsCallable("addDeviceToken")
                 .call(hashMapOf("token" to token))
+                .addOnSuccessListener {
+                    Log.d("insertToken", it.data.toString())
+                }
     }
 
-    fun triggerAlert(user: FirebaseUser) {
-
+    fun triggerAlert() {
+        FirebaseFunctions.getInstance()
+                .getHttpsCallable("triggerAlert")
+                .call()
+                .addOnSuccessListener {
+                    Log.d("insertToken", it.data.toString())
+                }
     }
 }

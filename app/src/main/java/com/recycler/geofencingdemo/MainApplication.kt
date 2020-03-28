@@ -8,7 +8,7 @@ import com.recycler.geofencingdemo.utils.TinyDB
 
 const val TAG = "MainApplication"
 
-class MainApplication: Application() {
+class MainApplication : Application() {
 
     lateinit var deviceId: String
 
@@ -19,8 +19,9 @@ class MainApplication: Application() {
             deviceId = it.id
         }
         val tinyDb = TinyDB(this)
-        FirebaseAuth.getInstance().currentUser?.let { user -> {
+        FirebaseAuth.getInstance().currentUser?.let {
+            Log.d(TAG, "checking out")
             FirebaseDb.insertToken(tinyDb.getString("token"))
-        } }
+        }
     }
 }
