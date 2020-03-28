@@ -2,29 +2,48 @@ package com.recycler.geofencingdemo.activities
 
 import android.app.Activity
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
+import com.recycler.geofencingdemo.FirebaseDb
 import com.recycler.geofencingdemo.MainActivity
 import com.recycler.geofencingdemo.R
+import java.util.HashMap
 
 const val TAG = "SplashActivity"
-const val RC_SIGN_IN = 10
+const val RC_SIGN_IN = 102
 
 class SplashActivity : AppCompatActivity() {
+
+    private var handleDeepLink = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        var remoteConfig = Firebase.remoteConfig
+        intent.data?.run {
+            if ("https" == this.scheme && "stay-at-home-01.firebaseapp.com" == this.host) {
+                handleDeepLink = true
+                handleDeepLink()
+                try {
+                    val instanceId = this.getQueryParameter("id")!!
+                    Log.d(TAG, instanceId)
+                } catch (e: Exception) {
+                    Log.e(TAG, e.message!!)
+                }
+            }
+        }
+
+
+        val remoteConfig = Firebase.remoteConfig
         val configSettings = remoteConfigSettings {
             minimumFetchIntervalInSeconds = 3600
         }
@@ -32,19 +51,35 @@ class SplashActivity : AppCompatActivity() {
         remoteConfig.setDefaultsAsync(R.xml.remote_config)
 
         remoteConfig.fetchAndActivate()
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        val updated = task.result
-                        Log.d(TAG, "Config params updated: $updated")
-                        Toast.makeText(this, "Fetch and activate succeeded",
-                                Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(this, "Fetch failed",
-                                Toast.LENGTH_SHORT).show()
+                .addOnCompleteListener(this) {
+                    if (!handleDeepLink) {
+                        startMainActivity()
                     }
-                    FirebaseAuth.getInstance().currentUser?.let { startMainActivity() }
                 }
+    }
 
+    private fun handleDeepLink() {
+        if (FirebaseAuth.getInstance().currentUser === null) {
+            startUserLogin()
+        } else {
+            val instanceId = intent.data!!.getQueryParameter("id")!!
+            val data = hashMapOf("instanceId" to instanceId)
+            FirebaseFunctions.getInstance()
+                    .getHttpsCallable("addContact")
+                    .call(data)
+                    .addOnCompleteListener {
+                        if (it.isSuccessful) {
+                            val result = it.result?.data as HashMap<*, *>
+                            Log.d(TAG, result.toString())
+                        } else {
+                            it.exception?.run { Log.e(TAG, this.message!!) }
+                        }
+                        startMainActivity()
+                    }
+        }
+    }
+
+    private fun startUserLogin() {
         val providers = arrayListOf(
                 AuthUI.IdpConfig.GoogleBuilder().build(),
                 AuthUI.IdpConfig.FacebookBuilder().build())
@@ -57,27 +92,27 @@ class SplashActivity : AppCompatActivity() {
                 RC_SIGN_IN)
     }
 
-    private fun startMainActivity() {
-        Intent(this, MainActivity::class.java).run {
-            startActivity(this)
-            finish()
-        }
-    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == RC_SIGN_IN) {
             val response = IdpResponse.fromResultIntent(data)
-
             if (resultCode == Activity.RESULT_OK) {
-                // Successfully signed in
-                val user = FirebaseAuth.getInstance().currentUser
-                Toast.makeText(this, "Welcome " + user?.displayName, Toast.LENGTH_SHORT).show()
-                startMainActivity()
-                // ...
+                FirebaseAuth.getInstance().currentUser?.run {
+                    FirebaseDb.insertUser(this)
+                    Toast.makeText(this@SplashActivity, "Welcome $displayName", Toast.LENGTH_SHORT).show()
+                    handleDeepLink()
+                }
             } else {
                 Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun startMainActivity() {
+        Intent(this, MainActivity::class.java).run {
+            startActivity(this)
+            finish()
         }
     }
 }

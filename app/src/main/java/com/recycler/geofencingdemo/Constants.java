@@ -15,6 +15,7 @@ public class Constants {
     public static float GEOFENCE_RADIUS_IN_METERS = 50;
     public static double latitude = 28.6139;
     public static double longitude = 77.2090;
+    public static String DEEPLINK = "https://stay-at-home-01.firebaseapp.com/add?id=";
 
     /**
      * Map for storing information about tacme in the dubai.

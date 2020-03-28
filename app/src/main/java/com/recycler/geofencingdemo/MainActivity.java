@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,7 +21,10 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -40,13 +44,18 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.firebase.ktx.Firebase;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MainActivity";
     private static final int REQUEST_LOCATION_PERMISSION_CODE = 101;
+    private static final int RC_SIGN_IN = 101;
     private GoogleMap googleMap;
     private GeofencingRequest geofencingRequest;
     private GoogleApiClient googleApiClient;
@@ -264,6 +273,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.action_stop_monitor:
                 stopGeoFencing();
                 break;
+            case R.id.action_share_updates:
+                startShareUpdatesFlow();
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -295,9 +307,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 googleMap.getUiSettings().setZoomControlsEnabled(true);
 
                 circle = googleMap.addCircle(new CircleOptions().center(new LatLng(latLng.latitude, latLng.longitude))
-                                                     .radius(Constants.GEOFENCE_RADIUS_IN_METERS)
-                                                     .strokeColor(Color.RED)
-                                                     .strokeWidth(4f));
+                        .radius(Constants.GEOFENCE_RADIUS_IN_METERS)
+                        .strokeColor(Color.RED)
+                        .strokeWidth(4f));
                 googleMap.setOnMyLocationChangeListener(null);
             }
         });
@@ -320,5 +332,53 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
         isMonitoring = false;
         Log.e(TAG, "Connection Failed:" + connectionResult.getErrorMessage());
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+            if (resultCode == RESULT_OK) {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                FirebaseDb.INSTANCE.insertUser(user);
+                Toast.makeText(this, "Welcome " + user.getDisplayName(), Toast.LENGTH_SHORT).show();
+                showShareSheet();
+            } else {
+                Toast.makeText(this, "Something went wrong, try again", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void showShareSheet() {
+        MainApplication mainApplication = (MainApplication) getApplication();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        FirebaseDb.INSTANCE.insertInstanceId(user, mainApplication.deviceId);
+
+        Intent sendIntent = new Intent();
+        sendIntent.setAction(Intent.ACTION_SEND);
+        sendIntent.putExtra(Intent.EXTRA_TEXT, Constants.DEEPLINK + mainApplication.getDeviceId());
+        sendIntent.setType("text/plain");
+
+        Intent shareIntent = Intent.createChooser(sendIntent, null);
+        startActivity(shareIntent);
+    }
+
+    private void startShareUpdatesFlow() {
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            Log.d(TAG, "User: " + FirebaseAuth.getInstance().getCurrentUser().getDisplayName());
+            showShareSheet();
+        } else {
+            List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.GoogleBuilder().build(),
+                    new AuthUI.IdpConfig.FacebookBuilder().build());
+
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setAvailableProviders(providers)
+                            .build(),
+                    RC_SIGN_IN);
+        }
     }
 }
