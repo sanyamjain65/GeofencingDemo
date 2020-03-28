@@ -3,9 +3,9 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/action_start_monitor"
-        android:title="Start Monitor" />
-    <item
         android:id="@+id/action_stop_monitor"
         android:title="Stop Monitor" />
+    <item
+        android:id="@+id/login"
+        android:title="Login" />
 </menu>

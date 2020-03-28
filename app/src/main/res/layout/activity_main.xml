@@ -16,43 +16,57 @@
     <RelativeLayout
         android:id="@+id/rl_seekbar"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="140dp"
         android:background="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
 
+        <TextView
+            android:id="@+id/tv_range"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp"
+            android:text="Select Range"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+
+
         <SeekBar
             android:id="@+id/seekBar"
             android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:max="100"
-            android:progress="50"
-            android:min="10"
-            android:layout_above="@+id/bt_start"
-            android:layout_marginBottom="10dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_range"
             android:layout_centerInParent="true"
+            android:layout_margin="10dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
 
         <TextView
             android:id="@+id/tv_seekbar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_below="@id/seekBar"
             android:layout_centerHorizontal="true"
-            android:text="50"
-            android:layout_above="@+id/seekBar"
-            android:layout_marginBottom="10dp" />
+            android:text="10"
+            android:textColor="@android:color/black"
+            android:textSize="16sp" />
+
 
         <Button
             android:id="@+id/bt_start"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
-            android:text="Start Monitoring"/>
+            android:background="@android:color/holo_green_light"
+            android:text="Start Monitoring"
+            android:textColor="@android:color/white" />
 
     </RelativeLayout>
 
